@@ -286,7 +286,7 @@ public class YdbConnectionOutsideTransactionUnitTest {
         YdbConnectionState state = new OutsideTransactionState(ydbContext, ydbTxSettings);
         Transaction transaction = Mockito.mock(Transaction.class);
         when(transaction.getId()).thenReturn("test_tx_id");
-        when(session.beginTransaction(any(), any())).thenReturn(CompletableFuture.completedFuture(Result.success(transaction)));
+        when(session.beginTransaction(any(Transaction.Mode.class), any())).thenReturn(CompletableFuture.completedFuture(Result.success(transaction)));
         YdbConnection queryExecutor = new YdbConnection(ydbContext, state);
 
         Mono<Void> beginTransactionMono = queryExecutor.beginTransaction();
@@ -311,7 +311,7 @@ public class YdbConnectionOutsideTransactionUnitTest {
         YdbConnectionState state = new OutsideTransactionState(ydbContext, ydbTxSettings);
         Transaction transaction = Mockito.mock(Transaction.class);
         when(transaction.getId()).thenReturn("test_tx_id");
-        when(session.beginTransaction(any(), any()))
+        when(session.beginTransaction(any(Transaction.Mode.class), any()))
                 .thenReturn(CompletableFuture.completedFuture(Result.fail(Status.of(StatusCode.ABORTED))));
         YdbConnection queryExecutor = new YdbConnection(ydbContext, state);
 

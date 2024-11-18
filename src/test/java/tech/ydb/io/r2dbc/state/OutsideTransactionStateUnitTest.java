@@ -245,7 +245,7 @@ public class OutsideTransactionStateUnitTest {
         Session session = Mockito.mock(Session.class);
         Transaction transaction = Mockito.mock(Transaction.class);
         Mockito.when(transaction.getId()).thenReturn(TEST_TX_ID);
-        Mockito.when(session.beginTransaction(any(), any()))
+        Mockito.when(session.beginTransaction(any(Transaction.Mode.class), any()))
                 .thenReturn(CompletableFuture.completedFuture(Result.success(transaction)));
         Mockito.when(tableClient.createSession(any()))
                 .thenReturn(CompletableFuture.completedFuture(Result.success(session)));
@@ -272,7 +272,7 @@ public class OutsideTransactionStateUnitTest {
         Session session = Mockito.mock(Session.class);
         Transaction transaction = Mockito.mock(Transaction.class);
         Mockito.when(transaction.getId()).thenReturn(TEST_TX_ID);
-        Mockito.when(session.beginTransaction(any(), any()))
+        Mockito.when(session.beginTransaction(any(Transaction.Mode.class), any()))
                 .thenReturn(CompletableFuture.completedFuture(Result.fail(Status.of(StatusCode.ABORTED))));
         Mockito.when(tableClient.createSession(any()))
                 .thenReturn(CompletableFuture.completedFuture(Result.success(session)));
