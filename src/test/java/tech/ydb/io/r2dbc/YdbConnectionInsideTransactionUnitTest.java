@@ -40,6 +40,7 @@ import tech.ydb.proto.table.YdbTable;
 import tech.ydb.table.Session;
 import tech.ydb.table.query.DataQueryResult;
 import tech.ydb.table.query.Params;
+import tech.ydb.table.transaction.Transaction;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -173,7 +174,7 @@ public class YdbConnectionInsideTransactionUnitTest {
                 .verifyComplete();
 
         Assertions.assertEquals(state, queryExecutor.getCurrentState());
-        Mockito.verify(session, Mockito.never()).beginTransaction(any(), any());
+        Mockito.verify(session, Mockito.never()).beginTransaction(any(Transaction.Mode.class), any());
         Mockito.verify(session, Mockito.never()).close();
     }
 
