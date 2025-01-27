@@ -17,29 +17,59 @@
 package tech.ydb.io.r2dbc.statement;
 
 import reactor.core.publisher.Flux;
+import tech.ydb.common.transaction.TxMode;
 import tech.ydb.io.r2dbc.query.YdbQuery;
 import tech.ydb.io.r2dbc.result.YdbResult;
-import tech.ydb.io.r2dbc.YdbConnection;
+import tech.ydb.io.r2dbc.statement.binding.Binding;
+import tech.ydb.io.r2dbc.subscribers.QueryResultSubscriber;
+import tech.ydb.query.QuerySession;
+import tech.ydb.query.QueryStream;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author Egor Kuleshov
  */
 public class YdbDMLStatement extends YdbStatement {
-    public YdbDMLStatement(YdbQuery query, YdbConnection connection) {
-        super(query, connection);
+    private final QuerySession querySession;
+    private final List<QueryResultSubscriber> subscribers = new ArrayList<>();
+
+    public YdbDMLStatement(YdbQuery query, QuerySession querySession) {
+        super(query, null);
+        this.querySession = querySession;
+    }
+
+    /**
+     * Adds a subscriber that will process QueryResultParts of the QueryStream.
+     *
+     * @param subscriber The subscriber to be added.
+     */
+    public void addSubscriber(QueryResultSubscriber subscriber) {
+        subscribers.add(subscriber);
     }
 
     @Override
     public Flux<YdbResult> execute() {
-        bindings.getCurrent().validate();
+        Binding currentBinding = bindings.getCurrent();
+        currentBinding.validate();
 
-        String yql = query.getYqlQuery(bindings.getCurrent());
-        return Flux.fromIterable(bindings)
-                .concatMap(binding -> connection.executeDataQuery(
-                                yql,
-                                binding.toParams(),
-                                query.getOperationTypes()
-                        )
-                );
+        String yql = query.getYqlQuery(currentBinding);
+
+        try {
+            QueryStream queryStream = querySession.createQuery(yql, TxMode.NONE);
+
+            return Flux.create(sink -> {
+                QueryPartsHandler handler = new QueryPartsHandler(subscribers, sink);
+                queryStream.execute(handler)
+                        .thenAccept(result -> sink.complete())
+                        .exceptionally(e -> {
+                            sink.error(e);
+                            return null;
+                        });
+            });
+        } catch (Exception e) {
+            return Flux.error(e);
+        }
     }
 }

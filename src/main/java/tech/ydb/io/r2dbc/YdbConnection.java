@@ -121,8 +121,8 @@ public class YdbConnection implements Connection {
 
     YdbStatement createStatement(YdbQuery query) {
         return switch (query.type()) {
-            case DML -> new YdbDMLStatement(query, this);
-            case DDL -> new YdbDDLStatement(query, this);
+            case DML -> new YdbDMLStatement(query, null);
+            case DDL -> new YdbDDLStatement(query, null);
         };
     }
 
